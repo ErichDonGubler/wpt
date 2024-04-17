@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+let log;
+</script>
+<script type="importmap" onload="t.assert_unreached('onload')" onerror="t.done()">
+{
+  "imports": {
+    "./resources/log.js?pipe=sub&name=A": "./resources/log.js?pipe=sub&name=B",
+    "./resources/log.js?pipe=sub&name=C": "./resources/log.js?pipe=sub&name=D",
+    "./resources/log.js?pipe=sub&name=G": "./resources/log.js?pipe=sub&name=F",
+    "./resources/log.js?pipe=sub&name=X": "./resources/log.js?pipe=sub&name=X",
+    "bare": "./resources/log.js?pipe=sub&name=E",
+    "bare2": "./resources/log.js?pipe=sub&name=F"
+  },
+  "integrity": {
+    "./resources/log.js?pipe=sub&name=B": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+er10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7",
+    "./resources/log.js?pipe=sub&name=C": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+er10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7",
+    "./resources/log.js?pipe=sub&name=X": "sha384-mCon9M46vUfNK2Wb3yjvBmpBw/3hwB+wMYS8IzDBng+7//R5Qao35E1azo4gFVax",
+    "./resources/log.js?pipe=sub&name=InvalidExtra": "sha384-WsKk8nzJFPhk/4pWR4LYoPhEu3xaAc6PdIm4vmqoZVWqEgMYmZgOg9XJKxgD1+8v",
+    "./resources/log.js?pipe=sub&name=Suffix": "sha384-lbOWldbmji7sCHI/L8iVJ+elmFIMp41p+aYOLxqQfZMqtoFeHFVe/ASRA0IyZ1/9",
+    "./resources/log.js?pipe=sub&name=Multiple": "sha384-lbOWldbmji7sCHI/L8iVJ+elmFIMp41p+aYOLxqQfZMqtoFeHFVe/ASRA0IyZ1/9 sha512-rOJN8igD0+jW6lwNN3+InhXTgQztVHlq/HJ0riswXp8kMoiIDx5JpmCwuVem6Ll9q2LFNSu1xq23bsBMMQk1rg==",
+    "./resources/log.js?pipe=sub&name=Y": "sha384-mCon9M46vUfNK2Wb3yjvBmpBw/3hwB+wMYS8IzDBng+7//R5Qao35E1azo4gFVax",
+    "./resources/log.js?pipe=sub&name=E": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+tr10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7",
+    "bare2": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+tr10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7",
+    "resources/log.js?pipe=sub&name=Bare": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+tr10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7"
+  }
+}
+</script>
+<script type="module">
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=A")
+    .then(() => assert_unreached())
+    .catch(() => assert_equals(log.length, 0))
+  },
+  'script was not loaded, as its resolved URL failed its integrity check');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=C")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:D");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its resolved URL had no integrity check, despite' +
+  ' its specifier having one');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=X")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:X");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its integrity check passed');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=Y")
+    .then(() => assert_unreached())
+    .catch(() => assert_equals(log.length, 0))
+  },
+  'Script with no import definition was not loaded, as it failed its' +
+  ' integrity check');
+
+promise_test(() => {
+  log = [];
+  return import("bare")
+    .then(() => assert_unreached())
+    .catch(() => assert_equals(log.length, 0))
+  },
+  'Bare specifier script was not loaded, as it failed its integrity check');
+
+promise_test(() => {
+  log = [];
+  return import("bare2")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:F");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'Bare specifier used for integrity loaded, as its definition should have' +
+  ' used the URL');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=InvalidExtra")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:InvalidExtra");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its integrity check passed, despite having an extra' +
+  ' invalid hash');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=Suffix")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:Suffix");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its integrity check passed, despite having an' +
+  ' invalid suffix');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=Multiple")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:Multiple");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its integrity check passed given multiple hashes.' +
+  ' This also makes sure that the larger hash is picked.');
+
+promise_test(() => {
+  log = [];
+  return import("./resources/log.js?pipe=sub&name=Bare")
+    .then(() => {
+      assert_equals(log.length, 1);
+      assert_equals(log[0], "log:Bare");
+    })
+    .catch((e) => assert_unreached(e))
+  },
+  'script was loaded, as its integrity check was ignored, as it was defined' +
+  ' using a URL that looks like a bare specifier');
+</script>
+

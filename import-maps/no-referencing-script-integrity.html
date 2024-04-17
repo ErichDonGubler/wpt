@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+let log;
+</script>
+<script type="importmap" onload="t.assert_unreached('onload')" onerror="t.done()">
+{
+  "integrity": {
+    "./resources/log.js?pipe=sub&name=NoReferencingScriptInvalidCheck": "sha384-Li9vy3DqF8tnTXuiaAJuML3ky+er10rcgNR/VqsVpcw+ThHmYcwiB1pbOxEbzJr7"
+  }
+}
+</script>
+</head>
+<body>
+<script>
+log = [];
+let promiseResolve;
+let promiseReject;
+let promise = new Promise((resolve, reject) => {
+  promiseResolve = resolve;
+  promiseReject = reject;
+});
+</script>
+<img src="/images/green.png"
+  onload="import('./resources/log.js?pipe=sub&name=NoReferencingScriptInvalidCheck').then(promiseResolve).catch(promiseReject)">
+<script type="module">
+promise_test(async () => {
+  try {
+    await promise;
+    assert_unreached();
+  } catch {
+    assert_equals(log.length, 0);
+  }
+}, "Script was not loaded as its integrity check failed");
+</script>
+</body>
+</html>
