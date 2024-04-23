@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<link rel="help" href="https://github.com/WICG/PEPC/blob/main/explainer.md#locking-the-pepc-style">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<!-- The permission element should not be focusable by script.
+-->
+<permission tabindex="0" id="id1" type="geolocation">
+
+<span tabindex="0" id="id2">This is some text</span>
+
+<script>
+  test(function(){
+    let el = document.getElementById("id1");
+    el.focus();
+    assert_not_equals(document.activeElement, el,
+      "Permission element should not be focused");
+
+    el = document.getElementById("id2");
+    el.focus();
+    assert_equals(document.activeElement, el,
+      "Other element should be focused");
+}, "Permission element is not focusable by script");
+</script>
+</body>
