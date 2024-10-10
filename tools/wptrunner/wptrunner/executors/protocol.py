@@ -1,11 +1,11 @@
 # mypy: allow-untyped-defs
 
+import collections
 import traceback
 from http.client import HTTPConnection
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Awaitable, Callable, ClassVar, List, Mapping, Optional, Type
-from webdriver.bidi.modules.script import Target
+from typing import Any, Awaitable, Callable, ClassVar, List, Mapping, Optional, Tuple, Type
 
 
 def merge_dicts(target, source):
@@ -70,6 +70,8 @@ class Protocol:
 
             msg = "Post-connection steps failed"
             self.after_connect()
+            for cls in self.implements:
+                getattr(self, cls.name).after_connect()
         except Exception:
             message = "Protocol.setup caught an exception:\n"
             message += f"{msg}\n" if msg is not None else ""
@@ -114,6 +116,11 @@ class ProtocolPart:
         """Run any setup steps required for the ProtocolPart."""
         pass
 
+    def after_connect(self):
+        """Run any post-connection steps. This happens after the ProtocolParts are
+        initalized so can depend on a fully-populated object."""
+        pass
+
     def teardown(self):
         """Run any teardown steps required for the ProtocolPart."""
         pass
@@ -149,6 +156,14 @@ class BaseProtocolPart(ProtocolPart):
         """Wait indefinitely for the browser to close.
 
         :returns: True to re-run the test, or False to continue with the next test"""
+        pass
+
+    @abstractmethod
+    def create_window(self, type="tab", **kwargs):
+        """Return a handle identifying a freshly created top level browsing context
+
+        :param type: - Type hint, either "tab" or "window"
+        :returns: A protocol-specific handle"""
         pass
 
     @property
@@ -200,18 +215,6 @@ class TestharnessProtocolPart(ProtocolPart):
         contains the initial runner page.
 
         :param str url_protocol: "https" or "http" depending on the test metadata.
-        """
-        pass
-
-    @abstractmethod
-    def get_test_window(self, window_id: str, parent: str) -> str:
-        """Get the window handle dorresponding to the window containing the
-        currently active test.
-
-        :param window_id: A string containing the DOM name of the Window that
-        contains the test, or None.
-        :param parent: The handle of the runner window.
-        :returns: A protocol-specific window handle.
         """
         pass
 
@@ -391,7 +394,7 @@ class BidiScriptProtocolPart(ProtocolPart):
     async def call_function(
             self,
             function_declaration: str,
-            target: Target,
+            target: Mapping[str, Any],
             arguments: Optional[List[Mapping[str, Any]]] = None
     ) -> Mapping[str, Any]:
         """
@@ -612,6 +615,37 @@ class AssertsProtocolPart(ProtocolPart):
     def get(self):
         """Get a count of assertions since the last browser start"""
         pass
+
+
+class LeakProtocolPart(ProtocolPart):
+    """Protocol part that checks for leaked DOM objects."""
+    __metaclass__ = ABCMeta
+
+    name = "leak"
+
+    def after_connect(self):
+        self.parent.base.load("about:blank")
+        self.expected_counters = collections.Counter(self.get_counters())
+
+    @abstractmethod
+    def get_counters(self) -> Mapping[str, int]:
+        """Get counts of types of live objects (names are browser-dependent)."""
+
+    def check(self) -> Optional[Mapping[str, Tuple[int, int]]]:
+        """Check for DOM objects that outlive the current page.
+
+        Returns:
+            A map from object type to (expected, actual) counts, if one or more
+            types leaked. Otherwise, `None`.
+        """
+        self.parent.base.load("about:blank")
+        counters = collections.Counter(self.get_counters())
+        if counters - self.expected_counters:
+            return {
+                name: (self.expected_counters[name], counters[name])
+                for name in set(counters) | set(self.expected_counters)
+            }
+        return None
 
 
 class CoverageProtocolPart(ProtocolPart):
@@ -901,4 +935,22 @@ class DevicePostureProtocolPart(ProtocolPart):
 
     @abstractmethod
     def clear_device_posture(self):
+        pass
+
+class VirtualPressureSourceProtocolPart(ProtocolPart):
+    """Protocol part for Virtual Pressure Source"""
+    __metaclass__ = ABCMeta
+
+    name = "pressure"
+
+    @abstractmethod
+    def create_virtual_pressure_source(self, source_type, metadata):
+        pass
+
+    @abstractmethod
+    def update_virtual_pressure_source(self, source_type, sample):
+        pass
+
+    @abstractmethod
+    def remove_virtual_pressure_source(self, source_type):
         pass

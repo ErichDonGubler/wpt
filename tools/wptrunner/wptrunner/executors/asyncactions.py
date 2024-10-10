@@ -1,12 +1,17 @@
 # mypy: allow-untyped-defs
 
-from webdriver.bidi.protocol import BidiWindow
+webdriver = None
 
+
+def do_delayed_imports():
+    global webdriver
+    import webdriver
 
 class BidiSessionSubscribeAction:
     name = "bidi.session.subscribe"
 
     def __init__(self, logger, protocol):
+        do_delayed_imports()
         self.logger = logger
         self.protocol = protocol
 
@@ -20,7 +25,7 @@ class BidiSessionSubscribeAction:
                 # value is extracted from the serialized object.
                 if isinstance(context, str):
                     contexts.append(context)
-                elif isinstance(context, BidiWindow):
+                elif isinstance(context, webdriver.bidi.protocol.BidiWindow):
                     contexts.append(context.browsing_context)
                 else:
                     raise ValueError("Unexpected context type: %s" % context)
