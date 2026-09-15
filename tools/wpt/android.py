@@ -1,6 +1,7 @@
 # mypy: allow-untyped-defs
 
 import argparse
+import logging
 import os
 import platform
 import signal
@@ -20,30 +21,12 @@ CMDLINE_TOOLS_VERSION_STRING = "12.0"
 CMDLINE_TOOLS_VERSION = "11076708"
 
 AVD_MANIFEST_X86_64 = {
-    "emulator_package": "system-images;android-24;default;x86_64",
-    "emulator_avd_name": "mozemulator-x86_64",
-    "emulator_extra_args": [
-        "-skip-adb-auth",
-        "-verbose",
-        "-show-kernel",
-        "-ranchu",
-        "-selinux", "permissive",
-        "-memory", "3072",
-        "-cores", "4",
-        "-skin", "800x1280",
-        "-gpu", "on",
-        "-no-snapstorage",
-        "-no-snapshot",
-        "-no-window",
-        "-no-accel",
-        "-prop", "ro.test_harness=true"
-    ],
-    "emulator_extra_config": {
-        "hw.keyboard": "yes",
-        "hw.lcd.density": "320",
-        "disk.dataPartition.size": "4000MB",
-        "sdcard.size": "600M"
-    }
+    "emulator_package": "system-images;android-34;google_apis;x86_64",
+    "emulator_avd_name": "mozemulator-android34-x86_64"
+}
+AVD_MANIFEST_ARM64 = {
+    "emulator_package": "system-images;android-34;google_apis;arm64-v8a",
+    "emulator_avd_name": "mozemulator-arm64"
 }
 
 
@@ -57,13 +40,36 @@ def do_delayed_imports(paths):
                                                 "tooltool",
                                                 "tooltool.py")
     android_device.EMULATOR_HOME_DIR = paths["emulator_home"]
+    for avd_info in android_device.AVD_DICT.values():
+        args = avd_info.extra_args
+
+        # -cores and -skins were reverted to their previous mozrunner values by
+        # -#55884 ("Disable reftests on firefox_android") for unclear reasons.
+        if "-cores" in args:
+            args[args.index("-cores") + 1] = "4"
+        if "-skin" in args:
+            args[args.index("-skin") + 1] = "800x1280"
+
+        # From mozilla-firefox/firefox's f87c442c5851, not yet in any mozrunner
+        # release (as of 8.4.0).
+        if "-no-metrics" not in args:
+            args.append("-no-metrics")
+
+
+def get_host_cpu():
+    machine = platform.machine().lower()
+    if machine == "amd64":
+        return "x86_64"
+    if machine == "arm64":
+        return "aarch64"
+    return machine
 
 
 def get_parser_install():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", dest="dest", action="store", default=None,
+    parser.add_argument("--path", dest="dest",
                         help="Root path to use for emulator tooling")
-    parser.add_argument("--reinstall", action="store_true", default=False,
+    parser.add_argument("--reinstall", action="store_true",
                         help="Force reinstall even if the emulator already exists")
     parser.add_argument("--prompt", action="store_true",
                         help="Enable confirmation prompts")
@@ -74,48 +80,9 @@ def get_parser_install():
 
 def get_parser_start():
     parser = get_parser_install()
-    parser.add_argument("--device-serial", action="store", default=None,
+    parser.add_argument("--device-serial",
                         help="Device serial number for Android emulator, if not emulator-5554")
     return parser
-
-
-def install_fixed_emulator_version(logger, paths):
-    # Downgrade to a pinned emulator version
-    # See https://developer.android.com/studio/emulator_archive for what we're doing here
-    from xml.etree import ElementTree
-
-    version = "32.1.15"
-    urls = {"linux": "https://redirector.gvt1.com/edgedl/android/repository/emulator-linux_x64-10696886.zip"}
-
-    os_name = platform.system().lower()
-    if os_name not in urls:
-        logger.error(f"Don't know how to install old emulator for {os_name}, using latest version")
-        # For now try with the latest version if this fails
-        return
-
-    logger.info(f"Downgrading emulator to {version}")
-    url = urls[os_name]
-
-    emulator_path = os.path.join(paths["sdk"], "emulator")
-    latest_emulator_path = os.path.join(paths["sdk"], "emulator_latest")
-    if os.path.exists(latest_emulator_path):
-        shutil.rmtree(latest_emulator_path)
-    os.rename(emulator_path, latest_emulator_path)
-
-    download_and_extract(url, paths["sdk"])
-    package_path = os.path.join(emulator_path, "package.xml")
-    shutil.copyfile(os.path.join(latest_emulator_path, "package.xml"),
-                    package_path)
-
-    with open(package_path) as f:
-        tree = ElementTree.parse(f)
-    node = tree.find("localPackage").find("revision")
-    assert len(node) == 3
-    parts = version.split(".")
-    for version_part, node in zip(parts, node):
-        node.text = version_part
-    with open(package_path, "wb") as f:
-        tree.write(f, encoding="utf8")
 
 
 def get_paths(dest):
@@ -127,7 +94,7 @@ def get_paths(dest):
     else:
         base_path = dest
 
-    sdk_path = os.environ.get("ANDROID_SDK_HOME", os.path.join(base_path, f"android-sdk-{os_name}"))
+    sdk_path = os.environ.get("ANDROID_SDK_ROOT", os.path.join(base_path, f"android-sdk-{os_name}"))
     avd_path = os.environ.get("ANDROID_AVD_HOME", os.path.join(sdk_path, ".android", "avd"))
     return {
         "base": base_path,
@@ -161,15 +128,14 @@ def uninstall_sdk(paths):
 
 def get_os_tag(logger):
     os_name = platform.system().lower()
-    if os_name not in ["darwin", "linux", "windows"]:
-        logger.critical("Unsupported platform %s" % os_name)
-        raise NotImplementedError
-
-    if os_name == "macosx":
-        return "darwin"
+    if os_name == "darwin":
+        return "mac"
     if os_name == "windows":
         return "win"
-    return "linux"
+    if os_name == "linux":
+        return "linux"
+    logger.critical("Unsupported platform %s" % os_name)
+    raise NotImplementedError
 
 
 def download_and_extract(url, path):
@@ -179,8 +145,11 @@ def download_and_extract(url, path):
     try:
         with open(temp_path, "wb") as f:
             with requests.get(url, stream=True) as resp:
-                shutil.copyfileobj(resp.raw, f)
-
+                resp.raise_for_status()
+                for chunk in resp.iter_content(2**16):
+                    f.write(chunk)
+        if not os.path.exists(temp_path):
+            raise ValueError(f"Failed to download {url}, output path doesn't exist")
         # Python's zipfile module doesn't seem to work here
         subprocess.check_call(["unzip", temp_path], cwd=path)
     finally:
@@ -222,9 +191,21 @@ def install_android_packages(logger, paths, packages, prompt=True):
 
 def install_avd(logger, paths, prompt=True):
     avd_manager = get_avd_manager(paths)
-    avd_manifest = AVD_MANIFEST_X86_64
+    host_cpu = get_host_cpu()
+    if host_cpu == "aarch64":
+        avd_manifest = AVD_MANIFEST_ARM64
+    elif host_cpu == "x86_64":
+        avd_manifest = AVD_MANIFEST_X86_64
+    else:
+        logger.critical("Unsupported host CPU architecture %s" % host_cpu)
+        raise NotImplementedError
 
     install_android_packages(logger, paths, [avd_manifest["emulator_package"]], prompt=prompt)
+
+    # avdmanager silently ignores ANDROID_AVD_HOME if the directory
+    # doesn't already exist.
+    if not os.path.exists(paths["avd"]):
+        os.makedirs(paths["avd"])
 
     cmd = [avd_manager,
            "--verbose",
@@ -243,7 +224,12 @@ def get_emulator(paths, device_serial=None):
     if android_device is None:
         do_delayed_imports(paths)
 
-    substs = {"top_srcdir": wpt_root, "TARGET_CPU": "x86"}
+    cpu = get_host_cpu()
+    substs = {
+        "top_srcdir": wpt_root,
+        "TARGET_CPU": cpu,
+        "HOST_CPU_ARCH": cpu
+    }
     emulator = android_device.AndroidEmulator(substs=substs,
                                               device_serial=device_serial,
                                               verbose=True)
@@ -272,8 +258,7 @@ class Environ:
 def android_environment(paths):
     return Environ(ANDROID_EMULATOR_HOME=paths["emulator_home"],
                    ANDROID_AVD_HOME=paths["avd"],
-                   ANDROID_SDK_ROOT=paths["sdk"],
-                   ANDROID_SDK_HOME=paths["sdk"])
+                   ANDROID_SDK_ROOT=paths["sdk"])
 
 
 def install(logger, dest=None, reinstall=False, prompt=True):
@@ -288,15 +273,13 @@ def install(logger, dest=None, reinstall=False, prompt=True):
 
         if new_install:
             packages = ["platform-tools",
-                        "build-tools;34.0.0",
-                        "platforms;android-34",
+                        "build-tools;37.0.0",
+                        "platforms;android-37.1",
                         "emulator"]
 
             install_android_packages(logger, paths, packages, prompt=prompt)
 
             install_avd(logger, paths, prompt=prompt)
-
-            install_fixed_emulator_version(logger, paths)
 
         emulator = get_emulator(paths)
     return emulator
@@ -338,28 +321,10 @@ def start(logger, dest=None, reinstall=False, prompt=True, device_serial=None):
 
 
 def run_install(venv, **kwargs):
-    try:
-        import logging
-        logging.basicConfig()
-        logger = logging.getLogger()
-
-        install(logger, **kwargs)
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        import pdb
-        pdb.post_mortem()
+    logger = logging.getLogger()
+    install(logger, **kwargs)
 
 
 def run_start(venv, **kwargs):
-    try:
-        import logging
-        logging.basicConfig()
-        logger = logging.getLogger()
-
-        start(logger, **kwargs)
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        import pdb
-        pdb.post_mortem()
+    logger = logging.getLogger()
+    start(logger, **kwargs)

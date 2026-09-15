@@ -1,5 +1,5 @@
 // META: title=test WebNN API expand operation
-// META: global=window,dedicatedworker
+// META: global=window
 // META: variant=?cpu
 // META: variant=?gpu
 // META: variant=?npu
@@ -15,22 +15,36 @@
 // MLOperand expand(
 //     MLOperand input, sequence<[EnforceRange] unsigned long> newShape);
 
-
-const getExpandPrecisionTolerance = (graphResources) => {
-  const toleranceValueDict = {float32: 0, float16: 0};
-  const expectedDataType =
-      getExpectedDataTypeOfSingleOutput(graphResources.expectedOutputs);
-  return {metricType: 'ULP', value: toleranceValueDict[expectedDataType]};
-};
-
 const expandTests = [
+  {
+    'name': 'expand float32 0D scalar to 0D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.461850643157959],
+          'descriptor': {shape: [], dataType: 'float32'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': []}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [-6.461850643157959],
+          'descriptor': {shape: [], dataType: 'float32'}
+        }
+      }
+    }
+  },
   {
     'name': 'expand float32 0D scalar to 1D',
     'graph': {
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [], 'dataType': 'float32'}
+          'descriptor': {shape: [], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -50,7 +64,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [24], 'dataType': 'float32'}
+          'descriptor': {shape: [24], dataType: 'float32'}
         }
       }
     }
@@ -61,7 +75,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [], 'dataType': 'float32'}
+          'descriptor': {shape: [], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -81,7 +95,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [4, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 6], dataType: 'float32'}
         }
       }
     }
@@ -92,7 +106,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [], 'dataType': 'float32'}
+          'descriptor': {shape: [], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -112,7 +126,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 3, 4], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 3, 4], dataType: 'float32'}
         }
       }
     }
@@ -123,7 +137,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [], 'dataType': 'float32'}
+          'descriptor': {shape: [], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -143,7 +157,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 2, 2, 3], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float32'}
         }
       }
     }
@@ -154,7 +168,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [], 'dataType': 'float32'}
+          'descriptor': {shape: [], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -174,7 +188,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 2, 3, 1, 2], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float32'}
         }
       }
     }
@@ -185,7 +199,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'},
+          'descriptor': {shape: [1], dataType: 'float32'},
           'constant': true
         }
       },
@@ -206,7 +220,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [24], 'dataType': 'float32'}
+          'descriptor': {shape: [24], dataType: 'float32'}
         }
       }
     }
@@ -217,7 +231,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'}
+          'descriptor': {shape: [1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -237,7 +251,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [24], 'dataType': 'float32'}
+          'descriptor': {shape: [24], dataType: 'float32'}
         }
       }
     }
@@ -248,7 +262,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'}
+          'descriptor': {shape: [1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -268,7 +282,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [4, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 6], dataType: 'float32'}
         }
       }
     }
@@ -279,7 +293,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'}
+          'descriptor': {shape: [1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -299,7 +313,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 3, 4], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 3, 4], dataType: 'float32'}
         }
       }
     }
@@ -310,7 +324,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'}
+          'descriptor': {shape: [1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -330,7 +344,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 2, 2, 3], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float32'}
         }
       }
     }
@@ -341,7 +355,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1], 'dataType': 'float32'}
+          'descriptor': {shape: [1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -361,7 +375,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 2, 3, 1, 2], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float32'}
         }
       }
     }
@@ -375,7 +389,7 @@ const expandTests = [
             10.898762702941895, -29.391416549682617, -73.74250793457031,
             22.456905364990234, -97.5792465209961, -76.95013427734375
           ],
-          'descriptor': {'dimensions': [1, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 6], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -395,7 +409,7 @@ const expandTests = [
             10.898762702941895, -29.391416549682617, -73.74250793457031,
             22.456905364990234, -97.5792465209961,   -76.95013427734375
           ],
-          'descriptor': {'dimensions': [4, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 6], dataType: 'float32'}
         }
       }
     }
@@ -409,7 +423,7 @@ const expandTests = [
             4.965915679931641, 66.14382934570312, 75.28175354003906,
             49.998130798339844
           ],
-          'descriptor': {'dimensions': [4, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -429,7 +443,7 @@ const expandTests = [
             49.998130798339844, 49.998130798339844, 49.998130798339844,
             49.998130798339844, 49.998130798339844, 49.998130798339844
           ],
-          'descriptor': {'dimensions': [4, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 6], dataType: 'float32'}
         }
       }
     }
@@ -440,7 +454,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -460,7 +474,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [4, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 6], dataType: 'float32'}
         }
       }
     }
@@ -474,7 +488,7 @@ const expandTests = [
             4.965915679931641, 66.14382934570312, 75.28175354003906,
             49.998130798339844
           ],
-          'descriptor': {'dimensions': [4, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [4, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -494,7 +508,7 @@ const expandTests = [
             75.28175354003906,  75.28175354003906,  75.28175354003906,
             49.998130798339844, 49.998130798339844, 49.998130798339844
           ],
-          'descriptor': {'dimensions': [2, 4, 3], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 4, 3], dataType: 'float32'}
         }
       }
     }
@@ -508,7 +522,7 @@ const expandTests = [
             10.898762702941895, -29.391416549682617, -73.74250793457031,
             22.456905364990234, -97.5792465209961, -76.95013427734375
           ],
-          'descriptor': {'dimensions': [1, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 6], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -528,7 +542,7 @@ const expandTests = [
             10.898762702941895, -29.391416549682617, -73.74250793457031,
             22.456905364990234, -97.5792465209961,   -76.95013427734375
           ],
-          'descriptor': {'dimensions': [2, 1, 2, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 1, 2, 6], dataType: 'float32'}
         }
       }
     }
@@ -539,7 +553,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [-6.461850643157959],
-          'descriptor': {'dimensions': [1, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -559,7 +573,7 @@ const expandTests = [
             -6.461850643157959, -6.461850643157959, -6.461850643157959,
             -6.461850643157959, -6.461850643157959, -6.461850643157959
           ],
-          'descriptor': {'dimensions': [2, 1, 3, 2, 2], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 1, 3, 2, 2], dataType: 'float32'}
         }
       }
     }
@@ -570,7 +584,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [21.694129943847656, -72.82571411132812],
-          'descriptor': {'dimensions': [1, 2, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 2, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -590,7 +604,7 @@ const expandTests = [
             -72.82571411132812, -72.82571411132812, -72.82571411132812,
             -72.82571411132812, -72.82571411132812, -72.82571411132812
           ],
-          'descriptor': {'dimensions': [2, 2, 6], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 6], dataType: 'float32'}
         }
       }
     }
@@ -601,7 +615,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [21.694129943847656, -72.82571411132812],
-          'descriptor': {'dimensions': [1, 2, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 2, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -621,7 +635,7 @@ const expandTests = [
             21.694129943847656, 21.694129943847656, 21.694129943847656,
             -72.82571411132812, -72.82571411132812, -72.82571411132812
           ],
-          'descriptor': {'dimensions': [2, 2, 2, 3], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float32'}
         }
       }
     }
@@ -632,7 +646,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [21.694129943847656, -72.82571411132812],
-          'descriptor': {'dimensions': [1, 2, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [1, 2, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -652,7 +666,7 @@ const expandTests = [
             21.694129943847656, 21.694129943847656, 21.694129943847656,
             -72.82571411132812, -72.82571411132812, -72.82571411132812
           ],
-          'descriptor': {'dimensions': [2, 1, 2, 2, 3], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 1, 2, 2, 3], dataType: 'float32'}
         }
       }
     }
@@ -663,7 +677,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [12.799123764038086, -26.550199508666992],
-          'descriptor': {'dimensions': [2, 1, 1, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 1, 1, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -683,7 +697,7 @@ const expandTests = [
             -26.550199508666992, -26.550199508666992, -26.550199508666992,
             -26.550199508666992, -26.550199508666992, -26.550199508666992
           ],
-          'descriptor': {'dimensions': [2, 3, 2, 2], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 3, 2, 2], dataType: 'float32'}
         }
       }
     }
@@ -694,7 +708,7 @@ const expandTests = [
       'inputs': {
         'expandInput': {
           'data': [12.799123764038086, -26.550199508666992],
-          'descriptor': {'dimensions': [2, 1, 1, 1], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 1, 1, 1], dataType: 'float32'}
         }
       },
       'operators': [{
@@ -714,18 +728,651 @@ const expandTests = [
             -26.550199508666992, -26.550199508666992, -26.550199508666992,
             -26.550199508666992, -26.550199508666992, -26.550199508666992
           ],
-          'descriptor': {'dimensions': [2, 2, 3, 1, 2], 'dataType': 'float32'}
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float32'}
+        }
+      }
+    }
+  },
+
+  // float16 tests
+  {
+    'name': 'expand float16 0D scalar to 1D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [24]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [24], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 0D scalar to 2D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [4, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [4, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 0D scalar to 3D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 3, 4]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 3, 4], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 0D scalar to 4D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 2, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 0D scalar to 5D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 3, 1, 2]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D constant tensor to 1D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'},
+          'constant': true
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [24]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [24], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D tensor to 1D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [24]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [24], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D tensor to 2D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [4, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [4, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D tensor to 3D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 3, 4]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 3, 4], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D tensor to 4D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 2, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 1D tensor to 5D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 3, 1, 2]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 2D (1st dimension)',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data':
+              [10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375],
+          'descriptor': {shape: [1, 6], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [4, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375
+          ],
+          'descriptor': {shape: [4, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 2D (2nd dimension)',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [4.96484375, 66.125, 75.3125, 50],
+          'descriptor': {shape: [4, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [4, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            4.96484375, 4.96484375, 4.96484375, 4.96484375, 4.96484375,
+            4.96484375, 66.125,     66.125,     66.125,     66.125,
+            66.125,     66.125,     75.3125,    75.3125,    75.3125,
+            75.3125,    75.3125,    75.3125,    50,         50,
+            50,         50,         50,         50
+          ],
+          'descriptor': {shape: [4, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 2D (all dimensions)',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [4, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [4, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 3D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [4.96484375, 66.125, 75.3125, 50],
+          'descriptor': {shape: [4, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 4, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            4.96484375, 4.96484375, 4.96484375, 66.125, 66.125, 66.125,
+            75.3125,    75.3125,    75.3125,    50,     50,     50,
+            4.96484375, 4.96484375, 4.96484375, 66.125, 66.125, 66.125,
+            75.3125,    75.3125,    75.3125,    50,     50,     50
+          ],
+          'descriptor': {shape: [2, 4, 3], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 4D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data':
+              [10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375],
+          'descriptor': {shape: [1, 6], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 1, 2, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375,
+            10.8984375, -29.390625, -73.75, 22.453125, -97.5625, -76.9375
+          ],
+          'descriptor': {shape: [2, 1, 2, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 2D tensor to 5D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [-6.4609375],
+          'descriptor': {shape: [1, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 1, 3, 2, 2]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375, -6.4609375,
+            -6.4609375, -6.4609375, -6.4609375, -6.4609375
+          ],
+          'descriptor': {shape: [2, 1, 3, 2, 2], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 3D tensor to 3D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [21.6875, -72.8125],
+          'descriptor': {shape: [1, 2, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 6]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            21.6875,  21.6875,  21.6875,  21.6875,  21.6875,  21.6875,
+            -72.8125, -72.8125, -72.8125, -72.8125, -72.8125, -72.8125,
+            21.6875,  21.6875,  21.6875,  21.6875,  21.6875,  21.6875,
+            -72.8125, -72.8125, -72.8125, -72.8125, -72.8125, -72.8125
+          ],
+          'descriptor': {shape: [2, 2, 6], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 3D tensor to 4D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [21.6875, -72.8125],
+          'descriptor': {shape: [1, 2, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 2, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125
+          ],
+          'descriptor': {shape: [2, 2, 2, 3], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 3D tensor to 5D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [21.6875, -72.8125],
+          'descriptor': {shape: [1, 2, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 1, 2, 2, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125,
+            21.6875, 21.6875, 21.6875, -72.8125, -72.8125, -72.8125
+          ],
+          'descriptor': {shape: [2, 1, 2, 2, 3], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 4D tensor to 4D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [12.796875, -26.546875],
+          'descriptor': {shape: [2, 1, 1, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 3, 2, 2]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            12.796875,  12.796875,  12.796875,  12.796875,  12.796875,
+            12.796875,  12.796875,  12.796875,  12.796875,  12.796875,
+            12.796875,  12.796875,  -26.546875, -26.546875, -26.546875,
+            -26.546875, -26.546875, -26.546875, -26.546875, -26.546875,
+            -26.546875, -26.546875, -26.546875, -26.546875
+          ],
+          'descriptor': {shape: [2, 3, 2, 2], dataType: 'float16'}
+        }
+      }
+    }
+  },
+  {
+    'name': 'expand float16 4D tensor to 5D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [12.796875, -26.546875],
+          'descriptor': {shape: [2, 1, 1, 1], dataType: 'float16'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments': [{'input': 'expandInput'}, {'newShape': [2, 2, 3, 1, 2]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [
+            12.796875,  12.796875,  12.796875,  12.796875,  12.796875,
+            12.796875,  -26.546875, -26.546875, -26.546875, -26.546875,
+            -26.546875, -26.546875, 12.796875,  12.796875,  12.796875,
+            12.796875,  12.796875,  12.796875,  -26.546875, -26.546875,
+            -26.546875, -26.546875, -26.546875, -26.546875
+          ],
+          'descriptor': {shape: [2, 2, 3, 1, 2], dataType: 'float16'}
+        }
+      }
+    }
+  },
+
+  // int32 tests
+  {
+    'name': 'expand int32 2D tensor to 2D',
+    'graph': {
+      'inputs': {
+        'expandInput': {
+          'data': [1, -2, 3],
+          'descriptor': {shape: [1, 3], dataType: 'int32'}
+        }
+      },
+      'operators': [{
+        'name': 'expand',
+        'arguments':
+            [{'input': 'expandInput'}, {'newShape': [3, 3]}],
+        'outputs': 'expandOutput'
+      }],
+      'expectedOutputs': {
+        'expandOutput': {
+          'data': [1, -2, 3, 1, -2, 3, 1, -2, 3],
+          'descriptor': {shape: [3, 3], dataType: 'int32'}
         }
       }
     }
   }
 ];
 
-if (navigator.ml) {
-  expandTests.forEach((test) => {
-    webnn_conformance_test(
-        buildGraphAndCompute, getExpandPrecisionTolerance, test);
-  });
-} else {
-  test(() => assert_implements(navigator.ml, 'missing navigator.ml'));
-}
+webnn_conformance_test(expandTests, buildAndExecuteGraph, getZeroULPTolerance);

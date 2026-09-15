@@ -12,6 +12,7 @@ from .. import assert_cookies
 
 pytestmark = pytest.mark.asyncio
 
+BEFORE_REQUEST_SENT_EVENT = "network.beforeRequestSent"
 PNG_BLACK_DOT = "/webdriver/tests/bidi/storage/get_cookies/support/black_dot.png"
 
 
@@ -34,7 +35,6 @@ async def test_top_context(
         context=new_tab["context"], url=url, wait="complete"
     )
 
-    BEFORE_REQUEST_SENT_EVENT = "network.beforeRequestSent"
     network_events = await setup_network_test(events=[BEFORE_REQUEST_SENT_EVENT])
     events = network_events[BEFORE_REQUEST_SENT_EVENT]
     on_before_request_sent = wait_for_event(BEFORE_REQUEST_SENT_EVENT)
@@ -63,11 +63,13 @@ async def test_iframe(
     wait_for_event,
     wait_for_future_safe,
     domain_1,
+    iframe
 ):
     cookie_name = "bar"
     cookie_value = "foo"
+    iframe_html = "<div id='in-iframe'>with cookies</div>"
     iframe_url = inline(
-        "<div id='in-iframe'>with cookies</div>",
+        iframe_html,
         domain=domain_1,
         parameters={"pipe": f"header(Set-Cookie, {cookie_name}={cookie_value})"},
     )
@@ -76,12 +78,15 @@ async def test_iframe(
         context=new_tab["context"], url=iframe_url, wait="complete"
     )
 
-    BEFORE_REQUEST_SENT_EVENT = "network.beforeRequestSent"
     network_events = await setup_network_test(events=[BEFORE_REQUEST_SENT_EVENT])
     events = network_events[BEFORE_REQUEST_SENT_EVENT]
     on_before_request_sent = wait_for_event(BEFORE_REQUEST_SENT_EVENT)
 
-    page_url = inline(f"<iframe src='{iframe_url}'></iframe>")
+    page_url = inline(
+        iframe(iframe_html,
+        domain=domain_1,
+        parameters={"pipe": f"header(Set-Cookie, {cookie_name}={cookie_value})"})
+    )
     await bidi_session.browsing_context.navigate(
         context=new_tab["context"], url=page_url, wait="complete"
     )
@@ -125,7 +130,7 @@ async def test_fetch(
     await bidi_session.browsing_context.navigate(
         context=new_tab["context"],
         url=url("/webdriver/tests/bidi/network/support/empty.html"),
-        wait="complete"
+        wait="complete",
     )
 
     cookie_name = "foo"
@@ -143,7 +148,6 @@ async def test_fetch(
         await_promise=False,
     )
 
-    BEFORE_REQUEST_SENT_EVENT = "network.beforeRequestSent"
     network_events = await setup_network_test(events=[BEFORE_REQUEST_SENT_EVENT])
     events = network_events[BEFORE_REQUEST_SENT_EVENT]
 
@@ -191,7 +195,6 @@ async def test_image(
         await_promise=False,
     )
 
-    BEFORE_REQUEST_SENT_EVENT = "network.beforeRequestSent"
     network_events = await setup_network_test(events=[BEFORE_REQUEST_SENT_EVENT])
     events = network_events[BEFORE_REQUEST_SENT_EVENT]
 
@@ -203,10 +206,10 @@ async def test_image(
     )
     await wait_for_future_safe(on_before_request_sent)
 
-    image_path = os.path.dirname(urlparse(image_url).path.replace("/", os.sep))
+    image_path = os.path.dirname(urlparse(image_url).path)
     result = await bidi_session.storage.get_cookies(
         partition=StorageKeyPartitionDescriptor(source_origin=origin(domain=domain_1)),
-        filter={"path": image_path}
+        filter={"path": image_path},
     )
 
     # Find the network event which belongs to the image.

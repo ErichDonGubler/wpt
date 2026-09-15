@@ -8,9 +8,9 @@ class ClickAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selector = payload["selector"]
-        element = self.protocol.select.element_by_selector(selector)
-        self.logger.debug("Clicking element: %s" % selector)
+        selectors = payload["selectors"]
+        element = self.protocol.select.element_by_selector_array(selectors)
+        self.logger.debug("Clicking element: %s" % selectors)
         self.protocol.click.element(element)
 
 
@@ -24,6 +24,33 @@ class DeleteAllCookiesAction:
     def __call__(self, payload):
         self.logger.debug("Deleting all cookies")
         self.protocol.cookies.delete_all_cookies()
+
+
+class GetAccessibilityPropertiesForAccessibilityNodeAction:
+    name = "get_accessibility_properties_for_accessibility_node"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        id = payload["accId"]
+        self.logger.debug("Getting accessibility properties: %s" % id)
+        return self.protocol.accessibility.get_accessibility_properties_for_accessibility_node(id)
+
+
+class GetAccessibilityPropertiesForElementAction:
+    name = "get_accessibility_properties_for_element"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        selector = payload["selector"]
+        element = self.protocol.select.element_by_selector(selector)
+        self.logger.debug("Getting accessibility properties for element: %s" % element)
+        return self.protocol.accessibility.get_accessibility_properties_for_element(element)
 
 
 class GetAllCookiesAction:
@@ -46,8 +73,8 @@ class GetComputedLabelAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selector = payload["selector"]
-        element = self.protocol.select.element_by_selector(selector)
+        selectors = payload["selectors"]
+        element = self.protocol.select.element_by_selector_array(selectors)
         self.logger.debug("Getting computed label for element: %s" % element)
         return self.protocol.accessibility.get_computed_label(element)
 
@@ -60,8 +87,8 @@ class GetComputedRoleAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selector = payload["selector"]
-        element = self.protocol.select.element_by_selector(selector)
+        selectors = payload["selectors"]
+        element = self.protocol.select.element_by_selector_array(selectors)
         self.logger.debug("Getting computed role for element: %s" % element)
         return self.protocol.accessibility.get_computed_role(element)
 
@@ -87,10 +114,10 @@ class SendKeysAction:
         self.protocol = protocol
 
     def __call__(self, payload):
-        selector = payload["selector"]
+        selectors = payload["selectors"]
         keys = payload["keys"]
-        element = self.protocol.select.element_by_selector(selector)
-        self.logger.debug("Sending keys to element: %s" % selector)
+        element = self.protocol.select.element_by_selector_array(selectors)
+        self.logger.debug("Sending keys to element: %s" % selectors)
         self.protocol.send_keys.send_keys(element, keys)
 
 
@@ -145,11 +172,11 @@ class ActionSequenceAction:
                 for action in actionSequence["actions"]:
                     if (action["type"] == "pointerMove" and
                         isinstance(action["origin"], dict)):
-                        action["origin"] = self.get_element(action["origin"]["selector"])
+                        action["origin"] = self.get_element(action["origin"]["selectors"])
         self.protocol.action_sequence.send_actions({"actions": actions})
 
-    def get_element(self, element_selector):
-        return self.protocol.select.element_by_selector(element_selector)
+    def get_element(self, element_selectors):
+        return self.protocol.select.element_by_selector_array(element_selectors)
 
     def reset(self):
         self.protocol.action_sequence.release()
@@ -182,6 +209,30 @@ class SetPermissionAction:
         state = permission_params["state"]
         self.logger.debug("Setting permission %s to %s" % (name, state))
         self.protocol.set_permission.set_permission(descriptor, state)
+
+
+class SetGlobalPrivacyControlAction:
+    name = "set_global_privacy_control"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        gpc = payload["gpc"]
+        return self.protocol.global_privacy_control.set_global_privacy_control(gpc)
+
+class GetGlobalPrivacyControlAction:
+    name = "get_global_privacy_control"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        return self.protocol.global_privacy_control.get_global_privacy_control()
+
+
 
 class AddVirtualAuthenticatorAction:
     name = "add_virtual_authenticator"
@@ -273,6 +324,25 @@ class SetUserVerifiedAction:
         self.logger.debug(
             "Setting user verified flag on authenticator %s to %s" % (authenticator_id, uv["isUserVerified"]))
         return self.protocol.virtual_authenticator.set_user_verified(authenticator_id, uv)
+
+class SetCredentialPropertiesAction:
+    name = "set_credential_properties"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        authenticator_id = payload["authenticator_id"]
+        credential_id = payload["credential_id"]
+        props = payload["props"]
+        self.logger.debug(
+            "Setting credential properties on authenticator %s, credential %s"
+            % (authenticator_id, credential_id)
+        )
+        return self.protocol.virtual_authenticator.set_credential_properties(
+            authenticator_id, credential_id, props
+        )
 
 class SetSPCTransactionModeAction:
     name = "set_spc_transaction_mode"
@@ -475,12 +545,109 @@ class RunBounceTrackingMitigationsAction:
         self.logger.debug("Running bounce tracking mitigations")
         return self.protocol.storage.run_bounce_tracking_mitigations()
 
+class CreateVirtualPressureSourceAction:
+    name = "create_virtual_pressure_source"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        source_type = payload["source_type"]
+        metadata = payload["metadata"]
+        self.logger.debug("Creating %s pressure source with %s values" % (source_type, metadata))
+        return self.protocol.pressure.create_virtual_pressure_source(source_type, metadata)
+
+class UpdateVirtualPressureSourceAction:
+    name = "update_virtual_pressure_source"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        source_type = payload["source_type"]
+        sample = payload["sample"]
+        own_contribution_estimate = payload["own_contribution_estimate"]
+        return self.protocol.pressure.update_virtual_pressure_source(source_type, sample, own_contribution_estimate)
+
+class RemoveVirtualPressureSourceAction:
+    name = "remove_virtual_pressure_source"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        source_type = payload["source_type"]
+        return self.protocol.pressure.remove_virtual_pressure_source(source_type)
+
+class SetProtectedAudienceKAnonymityAction:
+    name = "set_protected_audience_k_anonymity"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        owner, name, hashes = payload["owner"], payload["name"], payload["hashes"]
+        return self.protocol.protected_audience.set_k_anonymity(owner, name, hashes)
+
+class SetDisplayFeaturesAction:
+    name = "set_display_features"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        features = payload["features"]
+        return self.protocol.display_features.set_display_features(features)
+
+class ClearDisplayFeaturesAction:
+    name = "clear_display_features"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        return self.protocol.display_features.clear_display_features()
+
+class WebExtensionInstallAction:
+    name = "install_web_extension"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        self.logger.debug("installing web extension")
+        type = payload["type"]
+        path = payload.get("path")
+        value = payload.get("value")
+        return self.protocol.web_extensions.install_web_extension(type, path, value)
+
+class WebExtensionUninstallAction:
+    name = "uninstall_web_extension"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        self.logger.debug("uninstalling web extension")
+        extension_id = payload["extension_id"]
+        return self.protocol.web_extensions.uninstall_web_extension(extension_id)
+
 actions = [ClickAction,
            DeleteAllCookiesAction,
            GetAllCookiesAction,
            GetNamedCookieAction,
            GetComputedLabelAction,
            GetComputedRoleAction,
+           GetAccessibilityPropertiesForAccessibilityNodeAction,
+           GetAccessibilityPropertiesForElementAction,
            SendKeysAction,
            MinimizeWindowAction,
            SetWindowRectAction,
@@ -495,6 +662,7 @@ actions = [ClickAction,
            RemoveCredentialAction,
            RemoveAllCredentialsAction,
            SetUserVerifiedAction,
+           SetCredentialPropertiesAction,
            SetSPCTransactionModeAction,
            SetRPHRegistrationModeAction,
            CancelFedCMDialogAction,
@@ -511,4 +679,14 @@ actions = [ClickAction,
            GetVirtualSensorInformationAction,
            SetDevicePostureAction,
            ClearDevicePostureAction,
-           RunBounceTrackingMitigationsAction]
+           RunBounceTrackingMitigationsAction,
+           CreateVirtualPressureSourceAction,
+           UpdateVirtualPressureSourceAction,
+           RemoveVirtualPressureSourceAction,
+           SetProtectedAudienceKAnonymityAction,
+           SetDisplayFeaturesAction,
+           ClearDisplayFeaturesAction,
+           GetGlobalPrivacyControlAction,
+           SetGlobalPrivacyControlAction,
+           WebExtensionInstallAction,
+           WebExtensionUninstallAction]

@@ -74,7 +74,10 @@ def release_actions(session):
     ):
         time.sleep(0.1)
 
-    session.actions.release()
+    try:
+        session.actions.release()
+    except NoSuchWindowException:
+        pass
 
 
 @pytest.fixture
@@ -89,11 +92,6 @@ def key_reporter(session, test_actions_page, request):
 @pytest.fixture
 def test_actions_page(session, url):
     session.url = url("/webdriver/tests/support/html/test_actions.html")
-
-
-@pytest.fixture
-def test_actions_scroll_page(session, url):
-    session.url = url("/webdriver/tests/support/html/test_actions_scroll.html")
 
 
 @pytest.fixture

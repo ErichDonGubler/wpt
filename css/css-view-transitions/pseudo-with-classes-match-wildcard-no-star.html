@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class=reftest-wait>
 <title>View transition classes: selector should match with wildcard</title>
-<link rel="help" href="https://drafts.csswg.org/css-transitions-2/">
+<link rel="help" href="https://drafts.csswg.org/css-view-transitions-2/">
 <link rel="author" href="mailto:nrosenthal@chromium.org">
 <link rel="match" href="pseudo-with-classes-ref.html">
 <script src="/common/rendering-utils.js"></script>
@@ -28,6 +28,17 @@
   ::view-transition-old(.cls) {
     left: 100px;
   }
+
+::view-transition-old(*) {
+  animation: unset;
+  opacity: 1;
+}
+
+::view-transition-new(*) {
+  animation: unset;
+  opacity: 0;
+}
+
 </style>
 <div id=target></div>
 

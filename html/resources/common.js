@@ -14,12 +14,12 @@ const HTML5_ELEMENTS = [
   'mark',     'menu',     'meta',     'meter',    'nav',        'noscript',
   'object',   'ol',       'optgroup', 'option',   'output',     'p',
   'param',    'pre',      'progress', 'q',        'rp',         'rt',
-  'ruby',     's',        'samp',     'script',   'section',    'select',
-  'slot',     'small',    'source',   'span',     'strong',     'style',
-  'sub',      'sup',      'summary',  'table',    'tbody',      'td',
-  'template', 'textarea', 'tfoot',    'th',       'thead',      'time',
-  'title',    'tr',       'track',    'u',        'ul',         'var',
-  'video',    'wbr'
+  'ruby',     's',        'samp',     'script',   'search',     'section',
+  'select',   'slot',     'small',    'source',   'span',       'strong',
+  'style',    'sub',      'sup',      'summary',  'table',      'tbody',
+  'td',       'template', 'textarea', 'tfoot',    'th',         'thead',
+  'time',     'title',    'tr',       'track',    'u',          'ul',
+  'var',      'video',    'wbr'
 ];
 
 // only void (without end tag) HTML5 elements
@@ -31,6 +31,11 @@ var HTML5_VOID_ELEMENTS = [
 // https://html.spec.whatwg.org/multipage/multipage/forms.html#form-associated-element
 var HTML5_FORM_ASSOCIATED_ELEMENTS = [ 'button', 'fieldset', 'input',
         'object', 'output', 'select', 'textarea' ];
+
+// https://html.spec.whatwg.org/#category-label
+const HTML5_LABELABLE_ELEMENTS = [
+  'button', 'input', 'meter', 'output', 'progress', 'select', 'textarea'
+];
 
 const HTML5_SHADOW_ALLOWED_ELEMENTS = [
   'article', 'aside', 'blockquote', 'body', 'div', 'footer', 'h1', 'h2', 'h3',

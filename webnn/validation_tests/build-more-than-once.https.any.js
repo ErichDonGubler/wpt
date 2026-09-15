@@ -1,10 +1,13 @@
 // META: title=ensure MLMLGraphBuilder may build at most one MLGraph
-// META: global=window,dedicatedworker
+// META: global=window
+// META: variant=?cpu
+// META: variant=?gpu
+// META: variant=?npu
 // META: script=../resources/utils_validation.js
 
 const kExampleInputDescriptor = {
   dataType: 'float32',
-  dimensions: [2]
+  shape: [2]
 };
 
 promise_test(async t => {
@@ -92,4 +95,20 @@ promise_test(async t => {
   const b2 = builder2.input('b', kExampleInputDescriptor);
   const c2 = builder2.add(a2, b2);
   const graph2 = await builder2.build({c2});
-}, 'Build two graphs with separate MLGraphBuilders');
+}, 'Build two graphs with separate MLGraphBuilders from the same context');
+
+promise_test(async t => {
+  const builder1 = new MLGraphBuilder(context);
+  const context2 = await navigator.ml.createContext();
+  const builder2 = new MLGraphBuilder(context2);
+
+  const a1 = builder1.input('a', kExampleInputDescriptor);
+  const b1 = builder1.input('b', kExampleInputDescriptor);
+  const c1 = builder1.add(a1, b1);
+  const graph1 = await builder1.build({c1});
+
+  const a2 = builder2.input('a', kExampleInputDescriptor);
+  const b2 = builder2.input('b', kExampleInputDescriptor);
+  const c2 = builder2.add(a2, b2);
+  const graph2 = await builder2.build({c2});
+}, 'Build two graphs with separate MLGraphBuilders from different contexts');

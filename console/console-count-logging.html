@@ -1,41 +1,42 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Test console log are present</title>
+<title>Console Count - Automated Test</title>
+<link rel="help" href="https://console.spec.whatwg.org/#count">
+<meta name="assert" content="Console count method default parameter should work">
+
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver.js?feature=bidi"></script>
 <script src="/resources/testdriver-vendor.js"></script>
+
 <script>
-    promise_test(async () => {
-        await test_driver.bidi.log.entry_added.subscribe();
+promise_test(async (t) => {
+  const unsubscribe = await test_driver.bidi.log.entry_added.subscribe({contexts: [window]});
+  t.add_cleanup(async () => await unsubscribe());
 
-        // Create a promise that resolves when all the log entries are added.
-        const log_entries_promise = new Promise(resolve => {
-            const log_entries = [];
-            test_driver.bidi.log.entry_added.on(event => {
-                log_entries.push(event.text);
-                if (log_entries.length === 4) {
-                    resolve(log_entries);
-                }
-            });
-        });
+  const expected = ["default: 1", "default: 2", "default: 3", "default: 4"];
 
-        console.count();
-        console.count(undefined);
-        console.count("default");
-        console.count({
-            toString() {
-                return "default"
-            }
-        });
+  const entries_promise = new Promise(resolve => {
+    const entries = [];
+    const remove_listener = test_driver.bidi.log.entry_added.on(event => {
+      if (event.type !== "console" || event.method !== "count") return;
+      if (typeof event.text !== "string") return;
 
-        // Wait for the log entries to be added.
-        const log_entries = await log_entries_promise;
+      entries.push(event.text);
+      if (entries.length === expected.length) {
+        remove_listener();
+        resolve(entries);
+      }
+    });
+    t.add_cleanup(remove_listener);
+  });
 
-        assert_array_equals(log_entries, [
-            "default: 1",
-            "default: 2",
-            "default: 3",
-            "default: 4"]);
-    }, "Console count method default parameter should work");
+  console.count();
+  console.count(undefined);
+  console.count("default");
+  console.count({toString() { return "default"; }});
+
+  const entries = await entries_promise;
+  assert_array_equals(entries, expected);
+}, "Console count method default parameter should work");
 </script>

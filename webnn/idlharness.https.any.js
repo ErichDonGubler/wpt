@@ -23,19 +23,21 @@ idl_test(
       MLContext: ['context'],
       MLOperand: ['input', 'constant', 'output'],
       MLGraphBuilder: ['builder'],
-      MLGraph: ['graph']
+      MLGraph: ['graph'],
+      MLTensor: ['tensor']
     });
 
     self.context = await navigator.ml.createContext();
     self.builder = new MLGraphBuilder(self.context);
-    self.input =
-        builder.input('input', {dataType: 'float32', dimensions: [2, 3]});
+    self.input = builder.input('input', {dataType: 'float32', shape: [2, 3]});
     self.constant = builder.constant(
-        {dataType: 'float32', dimensions: [2, 3]},
-        new Float32Array(2 * 3).fill(1));
+        {dataType: 'float32', shape: [2, 3]}, new Float32Array(2 * 3).fill(1));
 
     self.output = builder.add(input, constant);
 
     self.graph = await builder.build({output});
+
+    self.tensor = await context.createTensor(
+        {dataType: 'float32', shape: [2, 3], readable: true, writable: true});
   }
 );

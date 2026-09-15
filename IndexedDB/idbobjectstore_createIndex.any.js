@@ -55,6 +55,33 @@ async_test(t => {
 }, "Attempt to create an index that requires unique values on an object store already contains duplicates");
 
 async_test(t => {
+    let db;
+
+    let open_rq = createdb(t);
+    open_rq.onupgradeneeded = function (e) {
+        db = e.target.result;
+        let txn = e.target.transaction,
+            objStore1 = db.createObjectStore("store1"),
+            objStore2 = db.createObjectStore("store2");
+
+        let index1 = objStore1.createIndex("index", "indexedProperty1");
+        let index2 = objStore2.createIndex("index", "indexedProperty2");
+
+        assert_true(index1 instanceof IDBIndex, "IDBIndex");
+        assert_true(index2 instanceof IDBIndex, "IDBIndex");
+        assert_equals(index1.name, "index", "index1.name");
+        assert_equals(index1.objectStore, objStore1, "index1.objectStore");
+        assert_equals(index1.keyPath, "indexedProperty1", "index1.keyPath");
+        assert_equals(index2.name, "index", "index2.name");
+        assert_equals(index2.objectStore, objStore2, "index2.objectStore");
+        assert_equals(index2.keyPath, "indexedProperty2", "index2.keyPath");
+    };
+    open_rq.onsuccess = function () {
+        t.done();
+    }
+}, "Check index names need only be unique if they are in the same object store");
+
+async_test(t => {
     let db, aborted;
 
     let open_rq = createdb(t);
@@ -355,7 +382,7 @@ async_test(t => {
     }
 
     open_rq.onsuccess = function () {
-        let store = db.transaction("store", "readonly", { durability: 'relaxed' }).objectStore("store")
+        let store = db.transaction("store", "readonly").objectStore("store")
 
         assert_equals(store.indexNames[0], "", "indexNames[0]")
         assert_equals(store.indexNames.length, 1, "indexNames.length")
@@ -421,7 +448,7 @@ async_test(t => {
     }
 
     open_rq.onsuccess = function (event) {
-        let txn = db.transaction("store", "readwrite", { durability: 'relaxed' });
+        let txn = db.transaction("store", "readwrite");
         let ostore = txn.objectStore("store");
         t.step(function () {
             assert_throws_dom("InvalidStateError", function () {
@@ -438,7 +465,7 @@ indexeddb_test(
         let store = db.createObjectStore("s");
     },
     function (t, db) {
-        let txn = db.transaction("s", "readonly", { durability: 'relaxed' });
+        let txn = db.transaction("s", "readonly");
         let store = txn.objectStore("s");
         txn.oncomplete = function () {
             assert_throws_dom("InvalidStateError", function () {
@@ -523,7 +550,7 @@ indexeddb_test(
         store.put({ id: 1, num: 100 });
     },
     function (t, db) {
-        let store = db.transaction("Store1", "readwrite", { durability: 'relaxed' }).objectStore("Store1");
+        let store = db.transaction("Store1", "readwrite").objectStore("Store1");
 
         store.openCursor().onsuccess = t.step_func(function (e) {
             let item = e.target.result.value;
@@ -546,7 +573,7 @@ indexeddb_test(
         store.put({ num: 100 });
     },
     function (t, db) {
-        let store = db.transaction("Store2", "readwrite", { durability: 'relaxed' }).objectStore("Store2");
+        let store = db.transaction("Store2", "readwrite").objectStore("Store2");
         store.openCursor().onsuccess = t.step_func(function (e) {
             let item = e.target.result.value;
             store.index("CompoundKey").get([item.num, item.id]).onsuccess = t.step_func(function (e) {
@@ -588,7 +615,7 @@ indexeddb_test(
         store.put({ num: num++, other: [{}] });
     },
     function (t, db) {
-        let store = db.transaction("Store3", "readwrite", { durability: 'relaxed' }).objectStore("Store3");
+        let store = db.transaction("Store3", "readwrite").objectStore("Store3");
         const keys = [];
         let count;
         store.count().onsuccess = t.step_func(e => { count = e.target.result; });

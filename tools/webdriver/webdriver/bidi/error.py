@@ -43,6 +43,10 @@ class InvalidSessionIDError(BidiException):
     error_code = "invalid session id"
 
 
+class InvalidWebExtensionException(BidiException):
+    error_code = "invalid web extension"
+
+
 class MoveTargetOutOfBoundsException(BidiException):
     error_code = "move target out of bounds"
 
@@ -71,6 +75,14 @@ class NoSuchHistoryEntryException(BidiException):
     error_code = "no such history entry"
 
 
+class NoSuchNetworkCollectorException(BidiException):
+    error_code = "no such network collector"
+
+
+class NoSuchNetworkDataException(BidiException):
+    error_code = "no such network data"
+
+
 class NoSuchNodeException(BidiException):
     error_code = "no such node"
 
@@ -79,12 +91,20 @@ class NoSuchRequestException(BidiException):
     error_code = "no such request"
 
 
+class NoSuchScreencastException(BidiException):
+    error_code = "no such screencast"
+
+
 class NoSuchScriptException(BidiException):
     error_code = "no such script"
 
 
 class NoSuchUserContextException(BidiException):
     error_code = "no such user context"
+
+
+class NoSuchWebExtensionException(BidiException):
+    error_code = "no such web extension"
 
 
 class UnableToCaptureScreenException(BidiException):
@@ -97,6 +117,10 @@ class UnableToSetCookieException(BidiException):
 
 class UnableToSetFileInputException(BidiException):
     error_code = "unable to set file input"
+
+
+class UnavailableNetworkDataException(BidiException):
+    error_code = "unavailable network data"
 
 
 class UnderspecifiedStoragePartitionException(BidiException):

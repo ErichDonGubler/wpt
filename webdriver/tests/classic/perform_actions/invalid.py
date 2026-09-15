@@ -3,7 +3,7 @@ import pytest
 
 from webdriver.error import InvalidArgumentException
 
-from tests.support.asserts import assert_error
+from tests.support.classic.asserts import assert_error
 from . import perform_actions
 
 
@@ -361,29 +361,18 @@ def test_pointer_action_subtype_invalid_value(session, value):
     assert_error(response, "invalid argument")
 
 
+@pytest.mark.parametrize("missing", ["x", "y"])
+def test_pointer_action_move_missing_property(session, mouse_chain, missing):
+    actions = mouse_chain.pointer_move(x=0, y=0)
+    del actions._actions[-1][missing]
+
+    with pytest.raises(InvalidArgumentException):
+        actions.perform()
+
+
 @pytest.mark.parametrize("coordinate", ["x", "y"])
-@pytest.mark.parametrize("value", [None, "foo", True, 0.1, [], {}])
+@pytest.mark.parametrize("value", [None, "foo", True, [], {}])
 def test_pointer_action_move_coordinate_invalid_type(session, coordinate, value):
-    actions = [
-        {
-            "type": "pointer",
-            "id": "foo",
-            "actions": [
-                {
-                    "type": "pointerMove",
-                    "x": value if coordinate == "x" else 0,
-                    "y": value if coordinate == "y" else 0,
-                }
-            ],
-        }
-    ]
-    response = perform_actions(session, actions)
-    assert_error(response, "invalid argument")
-
-
-@pytest.mark.parametrize("coordinate", ["x", "y"])
-@pytest.mark.parametrize("value", [MIN_INT - 1, MAX_INT + 1])
-def test_pointer_action_move_coordinate_invalid_value(session, coordinate, value):
     actions = [
         {
             "type": "pointer",
@@ -855,9 +844,7 @@ def test_wheel_action_scroll_origin_element_invalid_value(session):
 
 
 @pytest.mark.parametrize("missing", ["x", "y", "deltaX", "deltaY"])
-def test_wheel_action_scroll_missing_property(
-    session, test_actions_scroll_page, wheel_chain, missing
-):
+def test_wheel_action_scroll_missing_property(session, wheel_chain, missing):
     actions = wheel_chain.scroll(0, 0, 5, 10, origin="viewport")
     del actions._actions[-1][missing]
 
